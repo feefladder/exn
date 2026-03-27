@@ -124,9 +124,9 @@ impl<E: Error + Send + Sync + 'static> Exn<E> {
         &self.frame
     }
 
-    /// Extract the top-level error using move semantics
-    pub fn into_error(self) -> E {
-        *self.frame.error.downcast().expect("error type must match")
+    /// Extract the frame using move semantics
+    pub fn into_frame(self) -> Frame {
+        *self.frame
     }
 }
 
@@ -160,6 +160,11 @@ impl Frame {
         &*self.error
     }
 
+    /// Convert this frame into the error
+    pub fn into_error(self) -> Box<dyn Error + Send + Sync + 'static> {
+        self.error
+    }
+
     /// Return the source code location where this exception frame was created.
     pub fn location(&self) -> &'static Location<'static> {
         self.location
@@ -168,6 +173,11 @@ impl Frame {
     /// Return a slice of the children of the exception.
     pub fn children(&self) -> &[Frame] {
         &self.children
+    }
+
+    /// Convert this frame into child errors
+    pub fn into_children(self) -> Vec<Frame> {
+        self.children
     }
 }
 

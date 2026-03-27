@@ -35,13 +35,19 @@ struct MainError;
 impl std::error::Error for MainError {}
 
 mod app {
+    use human::HumanError;
+
     use super::*;
 
     pub fn run(question: String) -> Result<u64, AppError> {
         match human::answer(question) {
             Err(e) => {
                 if e.is_partial() {
-                    Ok(e.into_error().partial_data())
+                    Ok(e.into_frame()
+                        .into_error()
+                        .downcast::<HumanError>()
+                        .unwrap()
+                        .partial_data())
                 } else {
                     Err(e.raise(AppError))
                 }
