@@ -25,7 +25,7 @@ use exn::ResultExt;
 fn main() -> Result<(), MainError> {
     app::run("what is my age?".to_string()).or_raise(|| MainError)?;
     app::run("what is the answer?".to_string()).or_raise(|| MainError)?;
-    app::run("who am I?".to_string()).or_raise(|| MainError)?;
+    app::run("can the order of entropy be reversed?".to_string()).or_raise(|| MainError)?;
     Ok(())
 }
 
@@ -35,11 +35,25 @@ struct MainError;
 impl std::error::Error for MainError {}
 
 mod app {
-    use human::HumanError;
+    use computer::HumanError;
 
     use super::*;
 
     pub fn run(question: String) -> Result<u64, AppError> {
+        let computer = computer::build();
+        match computer.ask(question) {
+            Err(e) => {
+                if e.is_partial() {
+                    Ok(e.into_frame()
+                        .into_error()
+                        .downcast::<HumanError>()
+                        .unwrap()
+                        .partial_data())
+                } else {
+                    Err(e.raise(AppError))
+                }
+            }
+        }
         match human::answer(question) {
             Err(e) => {
                 if e.is_partial() {
@@ -62,18 +76,30 @@ mod app {
     impl std::error::Error for AppError {}
 }
 
-mod human {
+mod computer {
     use exn::bail;
 
     use super::*;
 
-    pub fn answer(question: String) -> Result<u64, HumanError> {
-        if question == "what is my age?" {
-            return Ok(23);
-        } else if question == "what is the answer?" {
-            bail!(HumanError::Partial(42))
+    #[derive(Debug)]
+    pub struct Computer {
+        data: u64,
+    }
+
+    pub fn build() -> Computer {
+        Computer { data: 42 }
+    }
+
+    impl Computer {
+        pub fn answer(question: String) -> Result<u64, HumanError> {
+            if question == "what is my age?" {
+                return Ok(23);
+            } else if question == "what is the answer?" {
+                bail!(HumanError::Partial(42))
+            } else if question == "can the order of entropy be reversed?" {
+            }
+            bail!(HumanError::Fatal { question })
         }
-        bail!(HumanError::Fatal { question })
     }
 
     #[derive(Debug, Display, PartialEq, Eq)]

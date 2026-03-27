@@ -39,6 +39,10 @@ name = "into-error"
 path = "src/into-error.rs"
 
 [[example]]
+name = "recover-poison"
+path = "src/recover-poison.rs"
+
+[[example]]
 name = "into-anyhow"
 path = "src/into-anyhow.rs"
 
